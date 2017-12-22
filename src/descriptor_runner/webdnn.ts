@@ -102,13 +102,15 @@ export interface BackendAvailability {
  */
 export function getBackendAvailability(): BackendAvailability {
     let status: { [name in BackendName]: boolean } = {
-        'webgpu': descriptorRunners['webgpu'].checkAvailability(),
-        'webgl': descriptorRunners['webgl'].checkAvailability(),
-        'webassembly': descriptorRunners['webassembly'].checkAvailability(),
+        // 'webgpu': descriptorRunners['webgpu'].checkAvailability(),
+        // 'webgl': descriptorRunners['webgl'].checkAvailability(),
+        // 'webassembly': descriptorRunners['webassembly'].checkAvailability(),
         'fallback': descriptorRunners['fallback'].checkAvailability(),
     };
 
-    let order = (['webgpu', 'webgl', 'webassembly', 'fallback'] as BackendName[]).filter(backend => status[backend]);
+    let order = ([
+        // 'webgpu', 'webgl', 'webassembly',
+        'fallback'] as BackendName[]).filter(backend => status[backend]);
 
     return {
         status: status,

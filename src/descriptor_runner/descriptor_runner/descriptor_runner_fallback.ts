@@ -13,6 +13,9 @@ import * as localforage_ from "../third/localforage.nopromises.min";
 import { BackendName } from "../webdnn";
 import { DescriptorRunner } from "./descriptor_runner";
 
+const FS = require("q-io/fs");
+
+
 /**
  * @private
  */
@@ -59,8 +62,11 @@ export default class DescriptorRunnerFallback extends DescriptorRunner<GraphDesc
 
     async fetchDescriptor(directory: string) {
         this.directory = directory;
-        let res = await webdnnFetch(`${directory}/graph_${this.backendName}.json`);
-        return res.json();
+
+        return await FS.read(`.${directory}/graph_${this.backendName}.json`, "utf-8")
+
+        // let res = await webdnnFetch();
+        // return res.json();
     }
 
     async fetchParameters(directory: string, progressCallback?: (loaded: number, total: number) => any) {

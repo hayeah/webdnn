@@ -2,6 +2,7 @@
     "compilerOptions": {
         "moduleResolution": "node",
         "target": "es2017",
+        "module": "commonjs",
         "strictNullChecks": true,
         "lib": [
             "es2017",

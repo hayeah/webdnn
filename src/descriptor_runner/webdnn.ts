@@ -319,88 +319,22 @@ export async function load(directory: string, initOption: InitOption = {}): Prom
             let fetchedDescriptor: GraphDescriptor | null;
             let cachedDescriptor: GraphDescriptor | null;
 
-
-            switch (cacheStrategy) {
-                case 'latest':
-                    fetchedDescriptor = await runner.fetchDescriptor(directory).catch(() => null);
-                    cachedDescriptor = await runner.restoreCachedDescriptor(directory);
-
-                    if (cachedDescriptor && fetchedDescriptor && cachedDescriptor.converted_at === fetchedDescriptor.converted_at) {
-                        descriptor = cachedDescriptor;
-                        parameters = await runner.restoreCachedParameters(directory, progressCallback);
-                        if (parameters) break;
-                    }
-
-                    if (fetchedDescriptor) {
-                        descriptor = fetchedDescriptor;
-                        parameters = await runner.fetchParameters(directory, progressCallback);
-                        if (parameters) break;
-                    }
-
-                    if (cachedDescriptor) {
-                        descriptor = cachedDescriptor;
-                        parameters = await runner.restoreCachedParameters(directory, progressCallback);
-                        if (parameters) break;
-                    }
-
-                    throw Error('Network error is occurred and no cache is exist.');
-
-                case 'networkOnly':
-                case 'networkFirst':
-                    fetchedDescriptor = await runner.fetchDescriptor(directory).catch(() => null);
-                    if (fetchedDescriptor) {
-                        descriptor = fetchedDescriptor;
-                        parameters = await runner.fetchParameters(directory, progressCallback);
-                        if (parameters) break;
-                    }
-
-                    if (cacheStrategy === 'networkOnly') throw Error('Network error is occurred in "networkOnly" cache strategy');
-
-                    cachedDescriptor = await runner.restoreCachedDescriptor(directory);
-                    if (cachedDescriptor) {
-                        descriptor = cachedDescriptor;
-                        parameters = await runner.restoreCachedParameters(directory, progressCallback);
-                        if (parameters) break;
-                    }
-
-                    throw Error('Network error is occurred and no cache is exist.');
-
-                case 'cacheOnly':
-                case 'cacheFirst':
-                    cachedDescriptor = await runner.restoreCachedDescriptor(directory);
-                    if (cachedDescriptor) {
-                        descriptor = cachedDescriptor;
-                        parameters = await runner.restoreCachedParameters(directory, progressCallback);
-                        if (parameters) break;
-                    }
-
-                    if (cacheStrategy === 'cacheOnly') throw Error('No cache is exist in "cacheOnly" cache strategy');
-
-                    fetchedDescriptor = await runner.fetchDescriptor(directory).catch(() => null);
-                    if (fetchedDescriptor) {
-                        descriptor = fetchedDescriptor;
-                        parameters = await runner.fetchParameters(directory, progressCallback);
-                        if (parameters) break;
-                    }
-
-                    throw Error('Network error is occurred and no cache is exist.');
-
-                default:
-                    throw Error(`"${cacheStrategy}" is not valid cache strategy name: "latest", "networkFirst", "networkOnly", "cacheFirst", "cacheOnly" is available.`)
-            }
+            descriptor = await runner.fetchDescriptor(directory)
+            parameters = await runner.fetchParameters(directory)
 
             await runner.setDescriptorAndParameters(descriptor, parameters);
 
-            if (saveCache) {
-                try {
-                    await runner.saveCache(directory, descriptor, parameters);
-                } catch (e) {
-                    /* do nothing */
-                }
-            }
+            // if (saveCache) {
+            //     try {
+            //         await runner.saveCache(directory, descriptor, parameters);
+            //     } catch (e) {
+            //         /* do nothing */
+            //     }
+            // }
         } catch (ex) {
             console.warn(`Model loading failed for ${backendName} backend. Trying next backend: ${ex.message}`);
-            continue;
+            throw ex;
+            // continue;
         }
 
         return runner;

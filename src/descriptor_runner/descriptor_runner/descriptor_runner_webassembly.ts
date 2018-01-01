@@ -12,6 +12,9 @@ import * as localforage_ from "../third/localforage.nopromises.min";
 import { BackendName } from "../webdnn";
 import { DescriptorRunner } from "./descriptor_runner";
 
+const qfs = require("q-io/fs");
+
+
 /**
  * @private
  */
@@ -95,8 +98,12 @@ export default class DescriptorRunnerWebassembly extends DescriptorRunner<GraphD
      */
     async fetchDescriptor(directory: string): Promise<GraphDescriptorWebassembly> {
         this.directory = directory;
-        let res = await webDNNFetch(`${directory}/graph_${this.backendName}.json`);
-        return res.json();
+        const dataPath = `.${directory}/graph_${this.backendName}.json`
+        const data = await qfs.read(dataPath);
+        return JSON.parse(data);
+
+        // let res = await webDNNFetch(`${directory}/graph_${this.backendName}.json`);
+        // return res.json();
     }
 
     /**
@@ -115,9 +122,11 @@ export default class DescriptorRunnerWebassembly extends DescriptorRunner<GraphD
      * @protected
      */
     async fetchParameters(directory: string, progressCallback?: (loaded: number, total: number) => any): Promise<ArrayBuffer> {
-        let weight_url = `${directory}/weight_${this.backendName}.bin`;
-        let weight_fetch = await webDNNFetch(weight_url);
-        return readArrayBufferProgressively(weight_fetch, progressCallback);
+        let weight_url = `.${directory}/weight_${this.backendName}.bin`;
+        const buf = await qfs.read(weight_url, "b");
+        return buf.buffer;
+        // let weight_fetch = await webDNNFetch(weight_url);
+        // return readArrayBufferProgressively(weight_fetch, progressCallback);
     }
 
     /**
@@ -202,7 +211,7 @@ export default class DescriptorRunnerWebassembly extends DescriptorRunner<GraphD
     }
 
     private compile(): Promise<void> {
-        let worker = new Worker(this.worker_entry_js_path);
+        let worker = new Worker(process.cwd() + this.worker_entry_js_path);
         worker.onerror = (event) => {
             console.error(event);
             // console.error('Worker Exception: ' + event.message);
